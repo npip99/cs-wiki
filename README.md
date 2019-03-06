@@ -2,6 +2,10 @@
 
 ## Linux
 
+### Basics
+
+It was once said that there were three basic necessities for an operating system. An assembler, a filesystem, and a shell. With those three, you can do anything. An assembler turns assembly code into ELF files, so that you can write arbitrary programs. A filesystem so you can store data. And, a shell so that you can interact with the computer. One of the most common shells these days is called "bash". When a computer starts up, the first thing it does is read the harddrive and start some simple services such as the program that handles internet packets. Then, it opens up a shell so that you can type commands in. Nowadays, we have windowing GUIs so it looks prettier than a terminal, but once upon a time, that's the way it was.
+
 ### SSH
 
 ssh is a program that will open up a shell on another computer, securely (ssh = S_ecure SH_ell). A URL is something you already know about, eg, http://www.google.com. A URI is a superset of a URL. A URI has a syntax of the form `username:password@domain:port`. You can connect to an AWS instance with username ubuntu using `ssh ubuntu@IPADDRESS`, where it by-default figures out the port, and you type in the password. If a private key is being used for authentication, do `ssh -i mykey.pem username@IPADDRESS`
