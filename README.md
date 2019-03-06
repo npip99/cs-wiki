@@ -8,7 +8,7 @@ It was once said that there were three basic necessities for an operating system
 
 ### SSH
 
-ssh is a program that will open up a shell on another computer, securely (ssh = S_ecure SH_ell). The other computer has to be running the ssh service in order to handle your request. Let's learn how to use it. A URL is something you already know about, eg, http://www.google.com. A URI is a superset of a URL. A URI has a syntax of the form `username:password@domain:port`. You can connect to an AWS instance with username ubuntu using `ssh ubuntu@IPADDRESS`, where it by-default figures out the port, and you type in the password. If a private key is being used for authentication, do `ssh -i mykey.pem username@IPADDRESS`
+ssh is a program that will open up a shell on another computer, securely (ssh = S_ecure SH_ell). The other computer has to be running the ssh service in order to handle your request. Let's learn how to use it. A URL is something you already know about, eg, http://www.google.com. A URI is a superset of a URL. A URI has a syntax of the form `username:password@domain:port`. You can connect to an AWS instance with username ubuntu using `ssh ubuntu@IPADDRESS`, where it by-default uses port 22, and you type in the password. If a private key is being used for authentication, do `ssh -i mykey.pem username@IPADDRESS`
 
 ### Executable files
 
