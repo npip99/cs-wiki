@@ -1,4 +1,4 @@
-# CS Wiki
+# Server Wiki
 
 ## Linux
 
