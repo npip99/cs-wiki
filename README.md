@@ -4,7 +4,7 @@
 
 ### Basics
 
-It was once said that there were three basic necessities for an operating system. An assembler, a filesystem, and a shell. With those three, you can do anything. An assembler turns assembly code into ELF files, so that you can write arbitrary programs. A filesystem so you can store data. And, a shell so that you can interact with the computer. One of the most common shells these days is called "bash". When a computer starts up, the first thing it does is read the harddrive and start some simple services such as the program that handles internet packets. Then, it opens up a shell so that you can type commands in. Nowadays, we have windowing GUIs so it looks prettier than a terminal, but once upon a time, that's the way it was.
+It was once said that there were three basic necessities for an operating system. An assembler, a filesystem, and a shell. With those three, you can do anything. An assembler turns assembly code into ELF files, so that you can write arbitrary programs. A filesystem so you can store data. And, a shell so that you can interact with the computer. One of the most common shells these days is called "bash". When a computer starts up, the first thing it does is read the harddrive and start some simple services such as the program that handles internet packets. Then, it opens up a shell so that you can type commands in. Nowadays, we have windowing GUIs so it looks prettier than a terminal, but once upon a time, that's the way it was. A shell simply collects characters as you type, and waits until you hit enter. Once you hit enter, it executes exactly what you wrote. That's about it.
 
 ### SSH
 
