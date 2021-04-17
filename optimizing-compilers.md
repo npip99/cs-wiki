@@ -61,7 +61,7 @@ not losing very much time. However, in the case of `arr.size()`, "Executing the 
 
 This is fixed very simply: By using function inlining!
 
-```
+```c++
 template<typename T>
 int vector<T>::size() {
   return this->internal_size;
@@ -70,7 +70,7 @@ int vector<T>::size() {
 
 Given this implementation of `arr.size()`, we can simply replace the for loop with
 
-```
+```c++
 for(int i = 2; i < arr.internal_size; i++) {
 ```
 
@@ -130,7 +130,7 @@ do_stuff(52)
 
 But sometimes `n` isn't known at compile time though, what do we do then? Well, just take it mod 4!
 
-```
+```c++
 for(int i = A; i < A + n; i += 4) {
   do_stuff(i)
 }
@@ -138,7 +138,7 @@ for(int i = A; i < A + n; i += 4) {
 
 ->
 
-```
+```c++
 int new_n = n - (n % 4); // Which, the compiler can easily transform into n & ~0b11, if you're worried about speed there
                          // It has all arithmetic with powers-of-2 hardcoded that way
 // Now, we loop-unroll with our new-found multiple of 4!
@@ -164,7 +164,7 @@ And yes, powers-of-two are often used for loop-unrolling, this is to ensure that
 
 In order for the compiler to analyze your code (rather than simply perform abstract optimizing manipulations on it like function inlining and loop unrolling), it needs to turn it into something that's very simple and logical, so that programmed optimizing transformations can act on it. The way most optimizing compilers do this is by rewriting your code in _Static Single Assignment Form_, or SSA. Let's see an example of SSA:
 
-```
+```c++
 X = 5
 Y = 2 + X
 Z = X * Y
@@ -193,7 +193,7 @@ Now, let's see how this simple concept can drastically reduce total instruction 
 
 And, now we translate to SSA Assembly:
 
-```
+```c++
 A = arr[n-2]
 B = arr[n-1]
 C = A+B
@@ -206,7 +206,7 @@ arr[n+1] = F
 
 Now, we can already start optimizing our code! The first way to optimize our code would be by replacing all uses of RAM with uses of registers, via application of property (3):
 
-```
+```c++
 A = arr[n-2]
 B = arr[n-1]
 C = A+B
@@ -219,7 +219,7 @@ arr[n+1] = F
 
 Now, via property (3) again, we can start wiping out variable duplication!
 
-```
+```c++
 A = arr[n-2]
 B = arr[n-1]
 C = A+B
@@ -232,7 +232,7 @@ Awesome!
 
 Using property (1), we can also reorganize into
 
-```
+```c++
 A = arr[n-2]
 B = arr[n-1]
 C = A+B
@@ -243,7 +243,7 @@ arr[n+1] = F
 
 By using property (1) to reorganize the body of the for loop into a (Read Input, Compute, Write Output) format, it allows further more macro-analysis to be made. Such as how (A, B) of one iteration of the for loop, is in-fact equal to the (C, D) of the previous iteration of the for loop! That means that you can do the following transformation:
 
-```
+```c++
 arr[0] = 0;
 arr[1] = 1;
 
@@ -271,7 +271,7 @@ You might have noticed that we didn't include the modular arithmetic during loop
 
 Another important optimization that optimizing compilers make is that of the _SIMD_ instruction set. This allows parallel computation of arithmetic operations. Now, fibonacci numbers are fundamentally sequential, since each element depends on the previous. However, what if we were simply filling an array with something like the sum squares of the index?
 
-```
+```c++
 for(int i = 0; i < n; i++) {
   arr[i] = i * i + n; // Let's say we want arr[i] = i * i + n
 }
@@ -279,7 +279,7 @@ for(int i = 0; i < n; i++) {
 
 Often, SIMD operations will operate on 4-tuples of 32bit integers. This is to utilize internal CPU 128bit registers used specifically for SIMD. Some processors also have 256bit registers for 8-tuples, but we'll just work with 4-tuples and loop unrolls of 4 for now. So first, as always, we unroll!
 
-```
+```c++
 for(int i = 0; i < n; i++) {
   arr[i] = i * i + n; 
   arr[i+1] = (i+1) * (i+1) + n; 
@@ -290,7 +290,7 @@ for(int i = 0; i < n; i++) {
 
 Now, we can reorganize this (Internally, this happens via SSA Assembly, but we'll just manipulate the C code for readability)
 
-```
+```c++
 for(int i = 0; i < n; i++) {
   SIMD_A = <i, i, i, i>; // Can be done in only a single set_simd(i) instruction
   SIMD_B = <0, 1, 2, 3>; // Can be done in only a single set_simd(0x00010203) instruction
