@@ -2,7 +2,7 @@
 
 ### Introduction
 
-First, if you haven't already, see `linux-basics.md` for a primer on Linux. Fundamentally, all Linux commands take in the following input:
+First, if you haven't already, see `linux.md` for a primer on Linux. Fundamentally, all Linux commands take in the following input:
 
 - Path of the executable to actually execute
 - Arguments to the executable
@@ -13,9 +13,9 @@ And all commands will output:
 - Data to file descriptors
 - A 32bit integer return code
 
-And we'll be talking about what all of those input/outputs mean.
+And we'll be talking about what all of those input/outputs mean and how to modify them via bash.
 
-Of course, commands can also render to the screen, access the network, etc. But we won't count that as input/output from the operating system's point of view for that process. Instead, that's just what the program happens to be doing to your computer while its running.
+Of course, commands can also render to the screen, open a VM, play audio, restart your computer, etc. But we won't count that as input/output from the operating system's point of view for that process. Instead, that's just what the program happens to be doing to your computer while its running.
 
 ### Arguments and return code
 
@@ -143,8 +143,6 @@ Now, after running the above two commands, try running that C code up above and 
 Environment variables are a nice way to pass data into an executable. Many executables use environment variables extensively, `git` will look for `VISUAL` or `EDITOR` when deciding what editor to use when editing a git commit, and all graphical applications will look for `XAUTHORITY` and `DISPLAY` when finding the X11 Server and Display Device to render to. And bash itself, will look for `HOME` when deciding what the `~` key should alias in paths.
 
 ### File Descriptors
-
-PREREQUISITES: The Chapter _file descriptors_ from `linux.md`
 
 File descriptors, as you've seen in `linux.md`, are pretty fundamental to Linux. They're so fundamental, that `bash` has very native built-in ways of working with them. This concept is called _redirection_, since it redirects where file descriptors will potentially read/write from.
 
