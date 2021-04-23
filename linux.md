@@ -1,4 +1,3 @@
-
 ## Linux
 
 This document explains all the ins-and-outs of the Linux Operating System. It's recommended that you read `linux-basics.md` first.
@@ -64,10 +63,9 @@ As you can see, there's a lot to look at. The first column we'll talk about shor
 
 Permissions for files are organized in the following way:
 
-Directories: `drwxrwxrwx`
-Files:       `srwxrwxrwx`
+`drwxrwxrwx`
 
-The "s" refers to the setuid bit, it will appear as a "d" for directories (Directories will never have a setuid bit). When the setuid bit is set, then the executable will run _as if the owner ran it_, even if the person executing the file is some other user with lesser permissions. The only executable that really uses the setuid bit, is `sudo`, and note that `root` owns the `sudo` command, this is how `root` lets other people run commands as if they were `root`, even though they aren't. The `sudo` command just checks if you're apart of the `sudo` group, and if you are it'll run the command as root, otherwise, it'll exit. It'll also ask for your user's password, to ensure that you didn't just leave your terminal unattended. 
+The "d" is the directory bit, it will appear as a "d" for directories, and "-" for files.
 
 Now, for each "rwx" triplet, this refers to the standard read/write/execute permissions.
 
@@ -76,6 +74,18 @@ The first "rwx" triplet refers to what permissions you the owner have over your 
 The second "rwx" triplet refers to what permissions members of the file's group have. So if you allow a file to have the group "UCF", and give it "r--" privileges, then all users who are a part of the group "UCF" will be able to read your file. This is pretty useful when you have many people in a University, and you have "grous" which can refer to clubs for example. Or you have a "professor" group and you can let professors read your work without letting anyone else read your work.
 
 The third "rwx" triplet is what permissions you give to the average random user who isn't apart of any useful groups or anything. By giving a file "r--" permission, you're letting the world read it. But of course, if the parent directory doesn't have "x--", then it's not like the user could've navigated to that directory anyway.
+
+In order to modify permissions, use the `chmod` command. You can do `chmod u-x` to remove executable permissions from yourself (The user), and `chmod g+w` to give write permissions to the group owner of that file. You can change the owner/group with `chown USER:GROUP ./file`. But of course, only `root` can change the user. However, you're allowed `chown yourself:some_group` so long as you're apart of that group (via the `groups` commands). Only `root` can change what groups a user is a part of.
+
+---
+
+Sometimes, you'll notice the following triplet:
+
+`-rwsr-xr-x`
+
+With an `s` instead of an `x`.
+
+When the setuid bit is set, then the executable will run _as if the owner ran it_, even if the person executing the file is some other user with lesser permissions. The only executable that really uses the setuid bit, is `sudo`, and you may note that `root` owns the `sudo` command. This is how `root` lets other people run commands as if they were `root`, even though they aren't. The `sudo` command just checks if you're apart of the `sudo` group, and if you are it'll run the command as root, otherwise, it'll exit. It'll also ask for your user's password, to ensure that you didn't just leave your terminal unattended. `chown` also uses the setuid bit, and it'll check that you're a member of a group before changing the group of a file to that group. (If you see `-rwS` instead of `-rws`, that's because you set the setuid bit without setting the executable bit, which isn't very helpful!)
 
 If you want to have fun with the setuid bit on a University network, you can make an executable `leave-message` that takes stdin and appends it to a `messages` file in your directory. Then you can give everyone in your University `--x` permissions on `leave-message` (Either via the "all" triplet, or the "group" triplet if there's a group for e.g. all University Students). You can mark `messages` with `-rw-------`, and now you can collect messages! (And without letting the message-leavers read other people's messages as well). Go ahead, ask people to use it! Maybe after a while, someone might exploit this by spamming your inbox. If you want to make this strong, you can save in a `messages-usage` file a mapping between USER_IDs and total message data sent in bytes. And don't let them send more than some number of bytes per day ;) Perhaps you can add a whitelist/blacklist system as well if you wish. Lots of opportunity.
 
