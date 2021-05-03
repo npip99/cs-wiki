@@ -1,5 +1,4 @@
 
-
 # C Language
 
 ## Introduction
@@ -74,16 +73,14 @@ printf("The perimeter of a circle with radius one is roughly: " + (2 * 3.14159))
 We get an error yelling about invalid operands to binary `+`.  This is because we're attempting to add a `float` value to a string, or location in memory. This is not defined in C, so we get a compile-time error. But how do we print numbers then? Well, `printf` has _format specifiers_, that will "stand in" for a value in a string, and `printf` will handle printing the complete string to stdout.
 
 Below are the most common format specifiers we will use:
-```
 
 | Format specifier| Data type           |
-| --------        |:-------------:      |
+|-----------------|:-------------------:|
 | %d              | integer             |
 | %u              | unsigned integer    |
-| %s           	  | string*             |
+| %s              | string*             |
 | %f              | float               |
 | %lf             | double (long float) |
-```
 
 [Here](https://www.cplusplus.com/reference/cstdio/printf/) is a more comprehensive list of format specifiers.
 
@@ -121,7 +118,7 @@ Note however that due to the limited representation of floating-point values tha
 Assigning a data type of less storage to one of more is fine and will simply promote the data type to the larger.
 Assigning a data type of larger storage to a smaller one incurs a loss of precision. For example:
 ```c
-	int x = 3.5;
+int x = 3.5;
 ```
 is valid, but the .5 will be lost as `x` holds only the value 3.
 
@@ -145,3 +142,4 @@ will read in an integer, float, double and char value from stdin and store it in
 1. Write a program to calculate the perimeter of any circle.
 ### Further Reading
 * [Man page for scanf](https://linux.die.net/man/3/scanf)
+
