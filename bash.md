@@ -7,15 +7,14 @@ First, if you haven't already, see `linux.md` for a primer on Linux. Fundamental
 - Path of the executable to actually execute
 - Arguments to the executable
 - Environment variables
-- Data from file descriptors
+- A list of file descriptors
 
-And all commands will output:
-- Data to file descriptors
+And all commands will return:
 - A 32bit integer return code
 
 And we'll be talking about what all of those input/outputs mean and how to modify them via bash.
 
-Of course, commands can also render to the screen, open a VM, play audio, restart your computer, etc. But we won't count that as input/output from the operating system's point of view for that process. Instead, that's just what the program happens to be doing to your computer while its running.
+Of course, Linux commands can also render to the screen, open a VM, play audio, restart your computer, etc. But we won't count that as input/output from the operating system's point of view for that process. Instead, that's just what the program happens to be doing to your computer while its running.
 
 ### Arguments and return code
 
@@ -33,11 +32,15 @@ int main(int argc, char** argv) {
 }
 ```
 
-This executable, will print out argc (The number of arguments), all of argv (i.e., each arguments individually), and then give a return code of 0. Return codes of 0 are expected to mean that a function _succeeded_, if you want to express failure, you can `return -1;` or some other non-zero value. Try compiling this and running it from bash with various arguments, and see what it does, use `gcc myfile.c -O myexec; ./myexec abc 123`. Try running it from another path via `cd ../..; ./dir1/dir2/myexec arg1 arg2` and see what prints out. We'll learn how bash passes these arguments to the executable in the Chapter _Running a command_, and we'll also learn the reason behind a spooky fact, `printf("Beyond the Argv: %s", argv[argc]);` is in-fact valid C and it prints `Beyond the Argv: (null)`!
+This executable, will print out argc (The number of arguments), all of argv (i.e., each arguments individually), and then give a return code of 0. Return codes of 0 are expected to mean that a function _succeeded_, if you want to express failure, you can `return -1;` or some other non-zero value.
+
+Try compiling this and running it from bash with various arguments, and see what it does, use `gcc myfile.c -O myexec; ./myexec abc 123`. Try running it from another path via `cd ../..; ./dir1/dir2/myexec arg1 arg2` and see what prints out. We'll learn how bash passes these arguments to the executable in the Chapter _Running a command_.
+
+Exercise ~ Try adding `printf("Argv[argc]: %s", argv[argc]);` to your code. This is valid, and will always give you the same answer!
 
 ### Running a command
 
-Now, we're ready to understand how bash allows you to interface with the three inputs and two outputs of every Linux executable. First, let's run a command:
+Now, we're ready to understand how bash allows you to interface with the four inputs of every Linux executable. First, let's run a command:
 
 ```
 $ echo Hello World!
@@ -51,29 +54,38 @@ Under the hood, bash is doing the following:
 - Then, bash decides at this point to search the filesystem for an executable with a name that matches `argv[0]`. In this case it will find one in `/bin/echo`.
 - Bash will then finally call `execv("/bin/echo", argv)`, which is a Linux kernel syscall. Linux _requires_ argv to have a final element of NULL, that's how it knows how long argv is!
 
-And yes, many people say that "`argv[0]` will be the command being called". This doesn't have to be true, but this is what bash decides to do, it just takes `argv[0]` and looks for that executable name when deciding which executable to run.
+And yes, many people say that "`argv[0]` will be the command being called". This doesn't have to be true, but this is what bash decides to do, it just takes the first string you type into bash, and uses that for both `argv[0]` and the name of the executable it searches for.
 
-The C code that `/bin/echo` was compiled from is quite simply:
+The C code that `/bin/echo` was compiled from is quite simple as a matter of fact:
 
 ```c
 #include <stdio.h>
+
 int main(int argc, char** argv) {
    // Don't print argv[0]
    for(int i = 1; i < argc; i++) {
-      fprintf(stdout, argv[i]);
+      fprintf(stdout, "%s", argv[i]);
+      if (i < argc - 1) {
+          fprintf(stdout, " ");
+      }
    }
+   fprintf(stdout, "\n");
 }
 ```
 
 And hence, `argv[1] == "Hello"` and `argv[2] == "World!"` get propagated to the screen! The C language decided to abstract the `argv` NULL problem away for you by searching for the `NULL` and saving its index as `argc` for you. Awesome!
 
-In-fact, any space-separated list of strings written `A B C D` you type into bash will turn into `argv` of `["A", "B", "C", "D"]`, so long as `"A"` isn't a bash keyword like `if` or `while`. And bash will always then search your filesystem for an executable by the name of `A`. If `A` is a relative or absolute path such as `./my_local_executable`, then it'll just look for exactly that file and try running. If it's a non-path string like `echo`, it'll inspect your entire binary file system. By "your entire binary file system", I mean your `PATH`, try `echo "$PATH"` to see where it'll search for executables as a list of directories. The command `printenv` will show you a lot of interesting configuration variables that bash uses, see if you can find `PATH` in there.
+Exercise ~ Try compiling the above, and running it with various arguments!
+
+In-fact, any space-separated list of strings written `A B C D` you type into bash will turn into `argv` of `["A", "B", "C", "D"]`, so long as `"A"` isn't a bash keyword like `if` or `while`. And bash will always then search your filesystem for an executable by the name of `A`. If `A` is a relative or absolute path such as `./my_local_executable`, then it'll just look for exactly that file and try running it. If it's a non-path string like `echo`, it'll inspect your entire binary file system. By "your entire binary file system", I mean your `PATH`. Try `echo "$PATH"` to see the list of directories where bash will search for executables. The command `printenv` will show you a lot of interesting configuration variables that bash uses, see if you can find `PATH` in there.
 
 ---
 
 Addendum:
 
-Why NULL-terminate argv, why doesn't the Linux execv just have an argc parameter? That's because you might _lie_ about argc and cause Linux to buffer overflow or hit undefined behavior if it believes you. So Linux doesn't believe you, it'll look for a NULL, and if there is no NULL terminator in the first ~32,000 elements of `argv` then `execv` will return an error. It'll also write all of the arguments to the same buffer, one after another, and the total length of that buffer can't be longer than ARG_MAX either. Otherwise `execv` will again just return with an error. Here's a fun one, try running the following program with various arguments so you can see the argument buffer itself:
+Why NULL-terminate argv, why doesn't the Linux execv just have an argc parameter? Well, then it becomes not very simple to pass the array in. In-reality, to pass in ["echo", "Hello", "World!", NULL], Linux expects you to call execv as follows: `execv("/bin/bash", "echo\0Hello\0World!\0\0");`. Linux will know the string ends when two consecutive NULL bytes `\0\0` are found.
+
+Have some fun exploring the following sample:
 
 ```c
 #include <stdio.h>
@@ -110,15 +122,14 @@ MYVAR="$(echo Helloooooooooo)"
 echo "$MYVAR"
 ```
 
-However, you probably will be disappointed to hear that MYVAR doesn't appear in `printenv`. Why is this? Well, there are bash variables, and then there are _environment_ variables. Environment variables get passed onto all child processes, and the Linux kernel is aware of them, while bash variables stay local to the current bash instance, and they just sit in bash's RAM to help you write bash scripts. Now for `printenv`, `printenv` is a simple executable that does the following:
+However, you probably will be disappointed to hear that MYVAR doesn't appear in `printenv`. Why is this? Well, there are bash variables, and then there are _environment_ variables. Environment variables get inherited by all child processes, and the Linux kernel is aware of them, while bash variables stay local to the current bash instance. Bash remembers them, but no one else does. Now for `printenv`, `printenv` is a simple executable that does the following:
 
 ```c
 #include <stdio.h>
 int main(int argc, char** argv, char** envp)
 {
   // Print envp[i], until envp[i] == NULL
-  for (int i = 0; envp[i] != NULL; i++)
-  {
+  for (int i = 0; envp[i] != NULL; i++) {
     printf("%s\n", envp[i]);    
   }
   return 0;
@@ -127,11 +138,14 @@ int main(int argc, char** argv, char** envp)
 
 Here, the C language left you alone with no nice argc abstractions, so you'll have to find the NULL terminator yourself. Try compiling and running it. You might also be enticed to here that argv and envp are part of the same buffer (Try printing argv beyond the bounds of argv to see. Quite spooky looking beyond an array like that).
 
-Okay so, how do you create an environment variable in linux? Specifically, how do we export our MYVAR variable that just isn't making it to the child process yet? Well, pretty simple, just write
+Note that this code captures an important quality of environment variables: When bash runs your C program, the environment of bash, gets automatically passed into the environment of the C program, even though bash and your C program are two different processes.
+
+Okay so, how do you create an environment variable in bash? Specifically, how do we export our MYVAR variable that child processed can inherit it? Well, pretty simple, just write
 
 ```bash
 export MYVAR
 ```
+
 Or, for a single export-assign statement,
 
 ```bash
@@ -140,7 +154,7 @@ export MY_OTHER_VAR="Hello Other World!"
 
 Now, after running the above two commands, try running that C code up above and perusing the result.  Cross-reference your result with `printenv` as well if you wish. Is your C code truly identical to `printenv`? If not, why, where?
 
-Environment variables are a nice way to pass data into an executable. Many executables use environment variables extensively, `git` will look for `VISUAL` or `EDITOR` when deciding what editor to use when editing a git commit, and all graphical applications will look for `XAUTHORITY` and `DISPLAY` when finding the X11 Server and Display Device to render to. And bash itself, will look for `HOME` when deciding what the `~` key should alias in paths.
+Environment variables are a nice way to pass data into an executable. Many executables use environment variables extensively, `git` will look for `VISUAL` or `EDITOR` when deciding what editor to use when editing a git commit, and all graphical applications will look for `XAUTHORITY` and `DISPLAY` when finding the X11 Server and Display Device to render to. And bash itself, will look for `HOME` when deciding what the `~` key should alias to in paths.
 
 ### File Descriptors
 
@@ -179,7 +193,7 @@ cat <in_file >>out_file
 
 This will append in_file onto out_file
 
-You can also be very cheeky, and _swap_ stdin and stdout by doing the following:
+You can also be very cheeky, and _swap_ stdout and stderr by doing the following:
 
 ```bash
 grep my_pattern 3>&2 2>&1 1>&3
@@ -191,8 +205,8 @@ So now, let's understand our `3>&2 2>&1 1>&3` construction:
 
 - Before anything happens, 0 refers to bash's stdin, 1 refers to bash's stdout, and 2 refers to bash's stderr. This is always the starting point.
 - First, we dup stderr to file descriptor 3, so now file descriptor 3 directory points to bash's stderr as well.
-- Second, we dup stdout to stderr. Now, stderr refers to bash's stdout.
-- Third, we dup file descriptor 3 to stdout. But remember, file descriptor 3 refered to bash's stderr. Thus, stdout now also refers to bash's stderr.
+- Second, we dup stdout to stderr. Now, stderr refers to bash's _current_ stdout.
+- Third, we dup file descriptor 3 to stdout. But remember, file descriptor 3 refered to bash's _original_ stderr. Thus, stdout now also refers to bash's _original_ stderr.
 - As an optional fourth, you can pass `3>&-`, which will close file descriptor 3. It reads visually like making file descriptor 3 point to a "null" file descriptor, but it translates fundamentally to the `close()` syscall.
 
 Another interesting thing bash does for you is _piping_, which is an awesome feature of bash. You can see its usage here:
@@ -210,7 +224,7 @@ pipe(fds);
 
 The above code will ask Linux to create a `pipe`. Linux will then create a file of type "pipe" in its VFS, and set fds[0] to an O_RDONLY version, and fds[1] to an O_WRONLY. The "pipe" file is handled using an in-memory filesystem known as "pipefs", and it's optimized specifically for passing "write" calls of one process into "read" calls of another. It'll also have a buffer of 64kb between the two processes to make sure that both are always running at all times if possible. But if e.g. one process writes faster than the other reads, and the buffer fills up, then then `pipefs` will block when the writing process tries to write past the `64kb` buffer, it'll only stop blocking once the receiving process reads some more.
 
-The only thing bash will do after calling `pipe`, is dup fds[1] into find's stdout, and dup fds[0] into xargs's stdin. Then bash'll close its own fds[0]/fds[1], and now find/xargs are linked. It'll fork both of those processes out, and both will move along doing their thing. Bash won't continue onto the next line until both are done. If `xargs`` finished first, fds[0] will `close` on exit, and fds[0] will be deallocated because no-one references it anymore. If fds[0] is deallocated, fds[1] will now be considered a "broken pipe". When that happens, if `find` tries to write to stdout, Linux will kill it with SIGPIPE because it wrote to a broken pipe and there's no-one there to read it. Bash doesn't care though and will completely ignore when the unimportant child dies due to SIGPIPE, Bash only cares if `xargs` dies since that's the end of the pipe train. You can do `set pipefail` if you care about a command failing due to a pipe failing, however.
+The only thing bash will do after calling `pipe`, is dup fds[1] into find's stdout, and dup fds[0] into xargs's stdin. Then bash'll close its own fds[0]/fds[1], and now find/xargs are linked. It'll fork both of those processes out, and both will move along doing their thing. Bash won't continue onto the next line until both are done. If `xargs` finished first, fds[0] will `close` on exit, and fds[0] will be deallocated because no-one references it anymore. If fds[0] is deallocated, fds[1] will now be considered a "broken pipe". When that happens, if `find` tries to write to stdout, Linux will kill it with SIGPIPE because it wrote to a broken pipe and there's no-one there to read it. Bash doesn't care though and will completely ignore when the unimportant child dies due to SIGPIPE, Bash only cares if `xargs` dies since that's the end of the pipe train. You can do `set pipefail` if you care about a command failing due to a pipe failing, however.
 
 ---
 
@@ -232,4 +246,3 @@ int main(int argc, char **argv) {
 ```
 
 Compare the results to `tty`'s response. Try looking up what `readlink` does, or what `/proc/self/fd` means. It's pretty interesting how Linux serves different values for the contens of `/proc/self` depending on which executable is the one asking. `/proc/self/fd` is also usually the only way to actually find the pipe files made by the `pipe` command. You can use `/proc/PID/fd/FD_NUMBER` to find the fd's for any process ID, "/proc/self" is just a virtual file that linux translates into /proc/PID whenever you try reading/writing to a file in it.
-
