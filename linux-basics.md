@@ -2,7 +2,7 @@
 
 ### Intro
 
-It was once said that there were three basic necessities for an operating system: An assembler, a filesystem, and a shell. With those three, you can do anything. An assembler to turn human-readable assembly code into ELF files, so that you can write arbitrary programs. A filesystem so you can store data and interact with hardware interfaces. And, a shell so that you can interact with the computer. One of the most common shells these days is called "bash". When a computer starts up, the first thing it does is read the harddrive and start some simple services such as services that handles internet packets. Then, it opens up a shell so that you can type commands in. Nowadays, we have windowing GUIs so it looks prettier than a terminal, but once upon a time, that's the way it was. A shell simply collects characters as you type, and waits until you hit enter. Once you hit enter, it executes exactly what you wrote. That's about it.
+Right now, as you read this article, the computer you're reading it from is probably running billions of lines of code, written by millions of software engineers. That is a very complicated system. The goal of this tutorial is to bring you back into first principles. Wind back time, to when computers only had a few thousand lines of code, written by less than dozen employees of Bell Labs. There are three basic necessities that you need in order for an operating system to be functional: An assembler, a filesystem, and a shell. With those three, you can do anything. An assembler will turn human-readable assembly code into executable binary files (e.g. ELF), so that you can write arbitrary programs. A filesystem where you can store data and interact with hardware interfaces. And, a shell so that you can interact with the computer via a keyboard. One of the most common shells is called "bash". When a computer starts up, the first thing it does is read the harddrive and start some simple services, such as services that handles internet packets. Then, it opens up a shell so that you can type commands in. A shell simply collects characters as you type, and waits until you hit enter. Once you hit enter, it executes exactly what you wrote. That's about it.
 
 ### SSH
 
@@ -10,14 +10,16 @@ ssh is a program that will open up a shell on another computer, securely (ssh = 
 
 ### Executable files
 
-An executable file in Linux will either be of the file format ELF, or will be a scripting language (Don’t cite me on that, there might be other things, but those are the two I know of). An ELF file is just machine code with some metadata, simple as that. A scripting language can be something like bash or python. Linux will look for the `#!` characters at the beginning of a file to be the “scripting language” identifier, followed by the scripting program’s filepath. So, an example `connect.sh` file would be
+An executable file in Linux will either be of the file format ELF, or will be a scripting language. An ELF file is just machine code, along with some metadata describing that machine code - simple as that. A scripting language can be something like bash or python. Linux will look for the `#!` characters at the beginning of a file to be the “scripting language” identifier, followed by the scripting program’s filepath. So, an example `connect.sh` file would be,
 
 ```
 #!/bin/bash
 ssh my_user@76.207.99.81
 ```
 
-The file line says to run `/bin/bash`, with the entire file as input. Now, linux won’t know your file is supposed to be an executable until you tell it that it is, and give permission to execute. `chmod` is a command that changes the permissions.
+The file line says to run `/bin/bash`, so bash is the executable, and the rest of the file is a script that the executable will execute for you. This lets you write executable files in plaintext, without having to write or compile a binary ELF file.
+
+However, linux won’t know your file is supposed to be an executable until you tell it that it is. So, you must give linux permission to execute the file. `chmod` is a command that changes the permissions of a file. Do `chmod +x connect.sh` to mark your shell file as executable.
 
 ### Services
 
